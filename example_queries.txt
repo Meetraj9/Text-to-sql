@@ -1,0 +1,239 @@
+# Example Queries for Text-to-SQL ICP Builder
+# Updated based on actual synthetic data values
+
+This file contains example queries you can use to test the text-to-SQL pipeline.
+Copy and paste these queries into the application to see how it generates SQL.
+
+## Basic Queries (Complete Information - Will Generate SQL Directly)
+
+1. Pest control companies in Arizona, targeting owners
+
+2. Commercial cleaning services in California, looking for managers
+
+3. Restaurants in Texas, targeting owners
+
+4. Find owners in Alabama
+
+5. Managers in Delaware
+
+## Queries with Partial Information (Will Ask Clarifying Questions)
+
+6. Pest control for businesses
+   Expected: Will ask for geography, title, employee_size, and square_footage (pest control requires sqft)
+
+7. Commercial cleaning services
+   Expected: Will ask for geography, title, employee_size, and square_footage (cleaning requires sqft)
+
+8. Restaurants in California
+   Expected: Will ask for title and employee_size
+
+9. Find owners
+   Expected: Will ask for geography, industry, and employee_size
+
+10. Companies in Arizona
+    Expected: Will ask for industry, title, and employee_size
+
+11. Pest control in Arizona
+    Expected: Will ask for title, employee_size, and square_footage
+
+12. Commercial cleaning for offices
+    Expected: Will ask for geography, title, employee_size, and square_footage
+
+13. Construction services
+    Expected: Will ask for geography, title, employee_size, and square_footage (construction requires sqft)
+
+## Queries with Industry Focus (Using Actual Data)
+
+14. Pest control in Oklahoma, targeting owners
+    Expected: Will ask for employee_size and square_footage
+
+15. Commercial cleaning in Washington, looking for managers
+    Expected: Will ask for employee_size and square_footage
+
+16. Restaurants in New Mexico, targeting owners
+    Expected: Will ask for employee_size
+
+17. Find owners in Oregon
+    Expected: Will ask for industry and employee_size
+
+18. Managers in Florida
+    Expected: Will ask for industry and employee_size
+
+## Queries with Employee Size Filters (Complete Information)
+
+19. Small companies (1-20 employees) in Arkansas, targeting owners
+    Expected: Generates SQL directly (all info including employee_size provided)
+
+20. Medium-sized businesses (21-200 employees) in Texas, targeting managers
+    Expected: Generates SQL directly (all info including employee_size provided)
+
+21. Large companies (200+ employees) in Mississippi, targeting executives
+    Expected: Generates SQL directly (all info including employee_size provided)
+
+22. Find micro businesses (small) in Hawaii
+    Expected: Will ask for industry and title
+
+23. Enterprise-level companies (large) in Alaska targeting CEOs
+    Expected: Will ask for industry
+
+## Queries with Title Variations (Tier System Testing)
+
+24. Owner in Arizona
+    Expected: Will ask for industry and employee_size. SQL will match Owner, Founder, Principal, Partner, Manager, etc. (Tier I)
+
+25. CEO in California
+    Expected: Will ask for industry and employee_size. SQL will match CEO, CFO, CTO, President, VP, etc. (Tier II)
+
+26. Director in Texas
+    Expected: Will ask for industry and employee_size. SQL will match Sales Director, Marketing Director, Operations Director, etc. (Tier III)
+
+27. Manager in New York
+    Expected: Will ask for industry and employee_size. SQL will match Manager, General Manager, Operations Manager, Sales Manager, etc. (Tier I)
+
+28. Founder in Florida
+    Expected: Will ask for industry and employee_size. SQL will match Owner, Founder, Co-Founder, Principal, Partner, etc. (Tier I)
+
+## Queries with Geographic Variations (Actual States/Cities)
+
+29. Pest control services in Oklahoma
+    Expected: Will ask for title, employee_size, and square_footage
+
+30. Commercial cleaning companies in Washington
+    Expected: Will ask for title, employee_size, and square_footage
+
+31. Restaurants in New Mexico
+    Expected: Will ask for title and employee_size
+
+32. Find businesses in Oregon
+    Expected: Will ask for industry, title, and employee_size
+
+33. Companies in Arkansas
+    Expected: Will ask for industry, title, and employee_size
+
+## Queries Testing Tier System
+
+34. Pest control for restaurants, targeting business owners
+    Expected: Will ask for geography, employee_size, and square_footage. SQL will match all Tier I titles
+
+35. Commercial cleaning services, looking for decision makers
+    Expected: Will ask for geography, title, employee_size, and square_footage
+
+36. Construction services, targeting company executives
+    Expected: Will ask for geography, title, employee_size, and square_footage. SQL will match Tier II if "executive" maps to CEO/VP
+
+37. Find restaurant CEOs who need pest control
+    Expected: Will ask for geography, employee_size, and square_footage. SQL will match all Tier II titles
+
+38. Office managers in California for cleaning services
+    Expected: Will ask for employee_size and square_footage. SQL will match all Tier I titles
+
+## Queries with Industry Descriptions
+
+36. Food service businesses in Arizona needing pest control
+
+37. Healthcare facilities in California requiring cleaning services
+
+38. Real estate developers in Texas for construction services
+
+39. Hospitality businesses in Oklahoma targeting owners
+
+40. Corporate offices in Washington for facility management services
+
+## Complex Multi-Criteria Queries
+
+41. Pest control for restaurants in Arizona, targeting owners of small to medium-sized companies (1-200 employees)
+
+42. Commercial cleaning for offices in California, looking for facilities managers at medium-sized companies
+
+43. Construction services for builders in Texas, targeting general managers of large enterprises (200+ employees)
+
+44. Find restaurant owners in Oklahoma who need pest control services
+
+45. Office buildings in Washington targeting property managers for cleaning services
+
+## Queries Testing Edge Cases
+
+46. All pest control companies in the United States
+    Expected: Will ask for geography (state/city)
+
+47. Cleaning services everywhere
+    Expected: Will ask for geography and title
+
+48. Construction companies targeting any decision maker
+    Expected: Will ask for geography and specific title
+
+49. Find all restaurant owners
+    Expected: Will ask for geography
+
+50. Any business in Arizona
+    Expected: Will ask for industry and title
+
+## Queries for Square Footage Industries (Pest Control, Cleaning, Construction)
+
+54. Commercial cleaning for buildings with medium square footage (5,000-20,000 sq ft) in California, targeting facilities managers
+    Expected: Will ask for employee_size. Then generates SQL with square_footage filter
+
+55. Pest control for restaurants with small square footage (less than 5,000 sq ft) in Arizona, targeting owners
+    Expected: Will ask for employee_size. Then generates SQL with square_footage filter
+
+56. Construction services for large buildings (20,000+ sq ft) in Texas, targeting general managers
+    Expected: Will ask for employee_size. Then generates SQL with square_footage filter
+
+## Queries Combining Multiple Filters (Complete Information)
+
+57. Small pest control companies (1-20 employees) in Arizona, targeting owners of restaurants with less than 5,000 square feet
+    Expected: Generates SQL directly (all info including employee_size and square_footage provided)
+
+58. Medium-sized cleaning services (21-200 employees) in California, targeting facilities managers of offices with 5,000-20,000 square feet
+    Expected: Generates SQL directly (all info including employee_size and square_footage provided)
+
+59. Large construction companies (200+ employees) in Texas, targeting executives of enterprises with over 20,000 square feet
+    Expected: Generates SQL directly (all info including employee_size and square_footage provided)
+
+## Queries with Actual Data Values (Guaranteed to Return Results)
+
+60. Owners in Delaware
+    Expected: Will ask for industry and employee_size. Note: Delaware has many records in the data
+
+61. General Manager in Oklahoma
+    Expected: Will ask for industry and employee_size. Note: General Manager is a common Tier I title
+
+62. Principal in Washington
+    Expected: Will ask for industry and employee_size. Note: Principal is a common Tier I title
+
+63. Sales Manager in New Mexico
+    Expected: Will ask for industry and employee_size. Note: Sales Manager is a common Tier I title
+
+64. Marketing Manager in Oregon
+    Expected: Will ask for industry and employee_size. Note: Marketing Manager is a common Tier I title
+
+## Testing Specific Scenarios
+
+65. Pest control in Arizona for owners
+    Expected: Will ask for employee_size and square_footage. SQL will use industry IN ('7342') and title matching Tier I
+
+66. Commercial cleaning in California for managers
+    Expected: Will ask for employee_size and square_footage. SQL will use industry IN ('7349') and title matching Tier I
+
+67. Restaurants in Texas for owners
+    Expected: Will ask for employee_size. SQL will use industry IN ('5812') and title matching Tier I
+
+68. Small businesses (micro) in Arkansas targeting owners
+    Expected: Will ask for industry. SQL will use employee_size BETWEEN 1 AND 20 AND title matching Tier I
+
+69. Medium companies in Florida targeting CEOs
+    Expected: Will ask for industry. SQL will use employee_size BETWEEN 21 AND 200 AND title matching Tier II
+
+70. Large enterprises in Alaska targeting directors
+    Expected: Will ask for industry. SQL will use employee_size >= 201 AND title matching Tier III
+
+## Complete Information Queries (No Questions Asked)
+
+71. Pest control in Arizona for owners, small companies (1-20 employees), small square footage (under 5,000 sq ft)
+    Expected: Generates SQL directly with all filters (geography, industry, title, employee_size, square_footage)
+
+72. Commercial cleaning in California for managers, medium companies (21-200 employees), medium square footage (5,000-20,000 sq ft)
+    Expected: Generates SQL directly with all filters
+
+73. Restaurants in Texas for owners, large companies (200+ employees)
+    Expected: Generates SQL directly with all filters (no square_footage needed for restaurants)

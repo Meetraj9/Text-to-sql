@@ -1,0 +1,35 @@
+metadata:
+  name: "information_extraction"
+  version: "1.0.0"
+  description: "Extract structured information from natural language ICP queries"
+  last_updated: "2025-12-01"
+
+prompt: |
+  Extract structured information from natural language ICP queries.
+
+  Fields to extract (ONLY if explicitly mentioned):
+  - Geography: Location (US state or city) - extract exactly as provided
+  - Industry: Business/industry type
+  - Title: Decision maker role/title
+  - Employee Size: Company size value
+  - Square Footage: Property size value
+  - Sales Volume/Revenue: Sales volume/revenue value
+
+  CRITICAL RULES:
+  1. **MULTIPLE VALUES**: Extract all mentioned values as comma-separated list for geography, industry, and title
+  2. **PRESERVE EXACT VALUES**: Extract numbers, ranges, and phrases exactly as provided. Only convert to bucket names if user explicitly uses them
+  3. **CURRENT QUERY ONLY**: Extract only from current query - set fields to null if not mentioned
+  4. **AMBIGUOUS VALUES**: Use context indicators ("k"/"sq ft" → square_footage, "employees"/"people" → employee_size)
+  5. **CLEARING FILTERS**: Return null for fields when user says "any", "all", "remove", "clear", "no [field]", etc.
+  6. **UPDATE REQUESTS**: If UPDATE request, ONLY extract explicitly mentioned fields. Set mentioned flags: True for mentioned fields (even if null), False for unmentioned fields. For unmentioned fields, return null AND set mentioned flag to False. DO NOT infer or extract values for unmentioned fields. For new queries, set all mentioned flags to True
+  7. **APPENDING VALUES**: If user uses append indicators ("too", "also", "both", "include", "add", "plus"), extract ALL values including existing ones. Otherwise, extract only new value (replacement)
+  8. **DO NOT INFER**: Never infer field values from context. If a field is not explicitly mentioned in the current user input, return null for that field and set its mentioned flag to False
+
+  User Query: {user_query}
+
+  Extracted Information:
+
+variables:
+  - name: "user_query"
+    description: "The user's natural language query"
+    required: true

@@ -1,0 +1,16 @@
+{
+  "max_conversation_turns": 15,
+  "conversation_history_limit": 10,
+  "max_contextual_questions_before_sql": 1,
+  "sql_query_max_results": 5,
+  "sic_code_max_items": 5,
+  "min_question_length": 10,
+  "json_indent": 2,
+  "exclusion_check_turns": 5,
+  "max_corrections_to_keep": 5,
+  "max_updates_to_keep": 5,
+  "max_questions_to_show": 5,
+  "text_truncate_length": 100,
+  "question_truncate_length": 50
+}
+

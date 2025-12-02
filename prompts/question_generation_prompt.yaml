@@ -1,0 +1,57 @@
+metadata:
+  name: "question_generation"
+  version: "1.0.0"
+  description: "Generate clarifying questions for missing ICP information"
+  last_updated: "2025-12-01"
+
+prompt: |
+  Generate clarifying questions for building an Ideal Customer Profile.
+
+  Available fields:
+  - geography: Location (US state or city) - REQUIRED
+  - industry: Business/industry type - REQUIRED
+  - title: Decision maker role - RECOMMENDED
+  - employee_size: Company size - RECOMMENDED
+  - square_footage: Property size - CONDITIONAL (only if industry requires it)
+
+  Extracted Information: {extracted_info}
+  Missing Information: {missing_fields}
+  Contextual Question Mode: {contextual_mode}
+  SQL Query Generated: {sql_generated}
+
+  RULES:
+  1. ONLY ask for fields in missing_fields - do NOT ask for fields already in extracted_info
+  2. Ask for ALL missing fields in ONE combined question
+  3. Keep it friendly and conversational
+  4. For square_footage: ONLY ask if industry requires property size information
+  5. **FOLLOW-UP QUESTIONS AFTER SQL** (when sql_generated="true"): After SQL is generated, you MUST ask ONE follow-up question to help refine filters, UNLESS the user has explicitly indicated they want to proceed. Examples:
+    - "Would you like to add or remove any filters?"
+    - "Do you want to expand to additional locations or industries?"
+    - "Should we adjust the employee size or other criteria?"
+    - "Is there anything else you'd like to refine in this query?"
+    Set needs_clarification: True and provide the question, UNLESS user explicitly said to proceed (e.g., "that's all", "no more questions", "proceed", "generate", "go ahead", "done")
+  6. **DETECT USER INTENT TO PROCEED**: Review the conversation context carefully. If user has explicitly indicated they want to proceed (e.g., "just list", "just give me", "that's all", "no more questions", "no", "no specific", "all", "proceed", "generate", "go ahead", "done", "that's it"), set needs_clarification to False immediately - do NOT ask any more questions
+  7. **CONTEXTUAL QUESTIONS** (when contextual_mode="true" AND sql_generated="false"): Ask ONE relevant contextual question ONLY if:
+    - Missing required fields exist, OR
+    - User has NOT indicated they want to proceed AND this would be the first contextual question
+  8. **STOP ASKING**: If user has explicitly indicated they want to proceed, set needs_clarification to False
+  9. Set needs_clarification: 
+    - True if: (missing required fields exist) OR (sql_generated="true" AND user hasn't explicitly said to proceed) OR (contextual_mode="true" AND sql_generated="false" AND user hasn't indicated they want to proceed)
+    - False otherwise
+  10. Set question: The question to ask, or None if no clarification needed
+
+  Respond with structured output (needs_clarification: boolean, question: string or None)
+
+variables:
+  - name: "extracted_info"
+    description: "JSON string of currently extracted information"
+    required: true
+  - name: "missing_fields"
+    description: "Comma-separated list of missing field names (or 'None' if no missing fields)"
+    required: true
+  - name: "contextual_mode"
+    description: "Whether to allow contextual questions ('true' or 'false')"
+    required: true
+  - name: "sql_generated"
+    description: "Whether SQL query has been generated ('true' or 'false')"
+    required: true

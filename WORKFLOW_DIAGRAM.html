@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-SQL Workflow Diagrams</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 2em;
+        }
+        h3 {
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #e9ecef;
+        }
+        .diagram-container.large {
+            padding: 40px;
+            min-height: 600px;
+        }
+        .description {
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8f4f8;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .description h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .description ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .description li {
+            margin: 8px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+        .business-section {
+            background: #f0f8ff;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 2px solid #667eea;
+        }
+        .technical-section {
+            background: #fafafa;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 2px solid #764ba2;
+        }
+        .section-divider {
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            margin: 50px 0;
+            border-radius: 2px;
+        }
+        .highlight-box {
+            background: #fff9c4;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #f57f17;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Text-to-SQL Workflow Diagrams</h1>
+        <p class="subtitle">Business Overview & Technical Details</p>
+        
+        <!-- BUSINESS PERSPECTIVE SECTION -->
+        <div class="business-section">
+            <h2>📊 Business Perspective</h2>
+            
+            <div class="description">
+                <h3>What This System Does</h3>
+                <p>This system allows users to build database queries using natural language conversation. Instead of writing complex SQL code, users simply describe what they're looking for in plain English, and the system:</p>
+                <ul>
+                    <li><strong>Understands</strong> what information the user needs</li>
+                    <li><strong>Asks clarifying questions</strong> when needed to ensure accuracy</li>
+                    <li><strong>Generates SQL queries</strong> automatically</li>
+                    <li><strong>Shows results</strong> immediately</li>
+                    <li><strong>Allows easy updates</strong> - users can refine their search by adding or removing filters</li>
+                </ul>
+            </div>
+
+            <h3>Complete Data Flow - How It Works</h3>
+            <div class="highlight-box">
+                <strong>💡 Key Insight:</strong> The system learns from the conversation, remembers what was discussed, and builds the query step by step through natural dialogue.
+            </div>
+            
+            <div class="diagram-container large">
+                <div class="mermaid">
+flowchart TD
+    Start([👤 User: 'I sell healthcare insurance<br/>in Texas to owners<br/>from companies below 50 employees']) --> Understand[🤖 System Understands:<br/>What products/services?<br/>Where? Who? Company size?]
+    
+    Understand --> Extract[📝 Extract Information:<br/>Geography: Texas<br/>Industry: healthcare insurance<br/>Title: owners<br/>Employee Size: below 50]
+    
+    Extract --> Check{All Info<br/>Complete?}
+    
+    Check -->|Missing Details| Ask[❓ Ask Question:<br/>'What role do you target?<br/>What company size?']
+    Check -->|Complete| Map[🗺️ Map to Database Terms]
+    
+    Ask --> Answer([👤 User Answers:<br/>'owners, below 50'])
+    Answer --> Extract
+    
+    Map --> MapInd[🏭 Map Industry:<br/>Healthcare → SIC Codes<br/>8011, 8021, 8041, etc.]
+    Map --> MapTitle[👔 Map Title:<br/>Owners → Tier I]
+    
+    MapInd --> Generate[💾 Generate SQL Query:<br/>SELECT companies WHERE<br/>location = Texas AND<br/>industry IN healthcare codes AND<br/>title_tier = tier_i AND<br/>employee_size < 50]
+    MapTitle --> Generate
+    
+    Generate --> Validate[✓ Validate Query<br/>Safety Check]
+    
+    Validate -->|Valid| Execute[🔍 Execute Query<br/>Search Database]
+    Validate -->|Invalid| Error([❌ Show Error])
+    
+    Execute --> Results([📊 Show Results:<br/>Found 1,234 companies<br/>matching your criteria])
+    
+    Results --> FollowUp{Want to<br/>Refine Search?}
+    
+    FollowUp -->|Yes| Update([👤 User: 'Add Arizona too'])
+    FollowUp -->|No| Complete([✅ Done])
+    
+    Update --> Preserve[🔄 System Preserves:<br/>Keeps: Healthcare, Owners, <50<br/>Updates: Adds Arizona]
+    
+    Preserve --> Map
+    Map --> Generate
+    Generate --> Execute
+    Execute --> Results2([📊 Updated Results:<br/>Found 2,456 companies<br/>in Texas & Arizona])
+    
+    style Start fill:#e1f5ff,stroke:#01579b,stroke-width:3px
+    style Understand fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Extract fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Ask fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    style Map fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style MapInd fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style MapTitle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Generate fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Validate fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+    style Execute fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style Results fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    style Results2 fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    style Preserve fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style Complete fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    style Error fill:#ffcdd2,stroke:#c62828,stroke-width:3px
+                </div>
+            </div>
+
+            <div class="description">
+                <h3>Key Business Benefits</h3>
+                <ul>
+                    <li><strong>No SQL Knowledge Required:</strong> Users don't need to know database query languages</li>
+                    <li><strong>Natural Conversation:</strong> Works like chatting with a colleague who understands your business needs</li>
+                    <li><strong>Smart Updates:</strong> When you say "add Arizona too", it adds Arizona without losing your other filters</li>
+                    <li><strong>Contextual Understanding:</strong> The system remembers the conversation and asks relevant follow-up questions</li>
+                    <li><strong>Immediate Results:</strong> See your data right away, then refine as needed</li>
+                    <li><strong>Safe & Secure:</strong> Only reads data, never modifies or deletes anything</li>
+                </ul>
+            </div>
+
+            <h3>Example User Journey</h3>
+            <div class="description">
+                <p><strong>Step 1:</strong> User says "I sell healthcare insurance in Texas"</p>
+                <p><strong>Step 2:</strong> System asks "What role do you target? What company size?"</p>
+                <p><strong>Step 3:</strong> User responds "owners, below 50 employees"</p>
+                <p><strong>Step 4:</strong> System generates SQL and shows: "Found 1,234 companies matching: Texas, healthcare insurance, owners, below 50 employees"</p>
+                <p><strong>Step 5:</strong> System asks "Would you like to add or remove any filters?"</p>
+                <p><strong>Step 6:</strong> User says "add Arizona too"</p>
+                <p><strong>Step 7:</strong> System updates query and shows: "Found 2,456 companies matching: Texas, Arizona, healthcare insurance, owners, below 50 employees"</p>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- TECHNICAL PERSPECTIVE SECTION -->
+        <div class="technical-section">
+            <h2>⚙️ Technical Perspective</h2>
+            
+            <h3>1. Simple Workflow Flow</h3>
+            <div class="description">
+                <p>High-level technical flow showing all nodes and decision points in the LangGraph workflow.</p>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TD
+    Start([User Input]) --> CM[📝 Conversation Manager<br/>Update Memory]
+    
+    CM --> EI[🔍 Extract Info<br/>Structured Extraction]
+    
+    EI -->|SQL Exists?| Route{Update or New?}
+    
+    Route -->|Update| HU[🔄 Handle Update<br/>Preserve Fields]
+    Route -->|New| VC[✓ Validate Completeness<br/>Check Required Fields]
+    
+    HU --> MI[🏭 Map Industry<br/>Industry → SIC Codes]
+    
+    VC -->|Missing Fields| CL{Need Clarification?}
+    VC -->|All Present| MI
+    
+    CL -->|Yes| RC[❓ Request Clarification<br/>Generate Question<br/>⏸️ HITL INTERRUPT]
+    CL -->|No| MI
+    
+    RC -->|Wait for User| EndWait([⏸️ Wait for Input])
+    EndWait -->|User Responds| Start
+    
+    MI --> MT[👤 Map Title<br/>Title → Tier]
+    MT --> GS[💾 Generate SQL<br/>Create Query]
+    GS --> VS[✓ Validate SQL<br/>Safety Check]
+    
+    VS -->|Valid| FU{Follow-up Question?}
+    VS -->|Invalid| EndError([❌ Error])
+    
+    FU -->|Yes| RC
+    FU -->|No| EndSuccess([✅ SQL Generated])
+    
+    style Start fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style CM fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style EI fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style VC fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style RC fill:#ffebee,stroke:#b71c1c,stroke-width:3px
+    style HU fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style MI fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style MT fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style GS fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style VS fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+    style FU fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style EndWait fill:#ffcdd2,stroke:#c62828,stroke-width:3px
+    style EndSuccess fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    style EndError fill:#ffcdd2,stroke:#c62828,stroke-width:3px
+                </div>
+            </div>
+
+            <h3>2. Detailed Sequence Diagram</h3>
+            <div class="description">
+                <p>Component interactions showing how different parts of the system communicate during workflow execution.</p>
+                <div class="highlight-box">
+                    <strong>🤖 LLM Calls Highlighted:</strong> All interactions marked with <strong style="color: #e65100;">🤖 LLM CALL</strong> indicate where the system uses Large Language Models to process natural language and generate structured outputs.
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant Streamlit as Streamlit UI
+    participant Workflow as LangGraph Workflow
+    participant CM as Conversation Manager
+    participant EI as Extract Info
+    participant VC as Validate Completeness
+    participant RC as Request Clarification
+    participant MI as Map Industry
+    participant MT as Map Title
+    participant GS as Generate SQL
+    participant VS as Validate SQL
+    participant DB as Database
+    participant LLM as 🤖 LLM
+
+    User->>Streamlit: Enter query/response
+    Streamlit->>Workflow: Invoke workflow
+    
+    Workflow->>CM: Update conversation memory
+    CM-->>Workflow: Memory updated
+    
+    Workflow->>EI: Extract structured info
+    Note over EI,LLM: 🤖 LLM CALL #1
+    EI->>LLM: 🤖 LLM CALL: Extract Info<br/>with ExtractedInfoWithMentioned
+    LLM-->>EI: Structured extraction result
+    EI-->>Workflow: Extracted info + mentioned flags
+    
+    alt SQL exists (Update Request)
+        Workflow->>MI: Handle update (preserve fields)
+    else New Request
+        Workflow->>VC: Validate completeness
+        VC-->>Workflow: Missing fields list
+        
+        alt Missing required fields
+            Workflow->>RC: Generate question
+            Note over RC,LLM: 🤖 LLM CALL #2
+            RC->>LLM: 🤖 LLM CALL: Generate Question<br/>with QuestionResponse
+            LLM-->>RC: Question or proceed signal
+            RC-->>Workflow: Question generated
+            Workflow-->>Streamlit: ⏸️ HITL INTERRUPT
+            Streamlit-->>User: Display question
+            User->>Streamlit: Provide answer
+            Streamlit->>Workflow: Resume workflow
+            Workflow->>EI: Extract from answer
+            Note over EI,LLM: 🤖 LLM CALL #1 (again)
+            EI->>LLM: 🤖 LLM CALL: Extract from answer
+            LLM-->>EI: Updated extraction
+        end
+        
+        Workflow->>MI: Map industry to SIC codes
+        Note over MI,LLM: 🤖 LLM CALL #3
+        MI->>LLM: 🤖 LLM CALL: Map Industry<br/>with IndustrySICMapping
+        LLM-->>MI: SIC codes + detailed rationale
+        MI-->>Workflow: SIC codes + rationale
+        
+        Workflow->>MT: Map title to tier
+        Note over MT: Rule-based keyword matching<br/>(from config file)
+        MT-->>Workflow: Title SQL condition<br/>(or None if no match)
+        
+        Workflow->>GS: Generate SQL query
+        GS->>DB: Get schema info
+        DB-->>GS: Table schema
+        Note over GS,LLM: 🤖 LLM CALL #4
+        GS->>LLM: 🤖 LLM CALL: Generate SQL<br/>with conversation context<br/>(handles title if no tier match)
+        LLM-->>GS: SQL query
+        GS-->>Workflow: SQL query
+        
+        Workflow->>VS: Validate SQL
+        Note over VS: Rule-based validation<br/>(No LLM call)
+        VS->>VS: Check safety (SQLValidator)
+        VS-->>Workflow: Validation result
+        
+        alt SQL Valid
+            Workflow->>RC: Check for follow-up question
+            Note over RC,LLM: 🤖 LLM CALL #5
+            RC->>LLM: 🤖 LLM CALL: Follow-up Question<br/>with QuestionResponse
+            LLM-->>RC: Follow-up question or none
+            alt Follow-up needed
+                RC-->>Workflow: Follow-up question
+                Workflow-->>Streamlit: ⏸️ HITL INTERRUPT
+                Streamlit-->>User: Display follow-up
+            else No follow-up
+                RC-->>Workflow: No question needed
+            end
+            
+            Workflow-->>Streamlit: SQL query + results
+            Streamlit->>DB: Execute query
+            DB-->>Streamlit: Query results
+            Streamlit-->>User: Display SQL + results
+        else SQL Invalid
+            VS-->>Workflow: Error message
+            Workflow-->>Streamlit: Error state
+            Streamlit-->>User: Display error
+        end
+    end
+                </div>
+            </div>
+            
+            <div class="description">
+                <h3>LLM Call Summary</h3>
+                <ul>
+                    <li><strong>🤖 LLM CALL #1 - Extract Info:</strong> Extracts structured information (geography, industry, title, employee_size, sales_volume) from user input and detects which fields were mentioned</li>
+                    <li><strong>🤖 LLM CALL #2 - Generate Question:</strong> Generates context-aware clarifying questions when required information is missing</li>
+                    <li><strong>🤖 LLM CALL #3 - Map Industry:</strong> Maps industry descriptions to SIC codes with detailed rationale for code selection</li>
+                    <li><strong>🤖 LLM CALL #4 - Generate SQL:</strong> Creates SQL query using conversation context, extracted filters, and database schema. Also handles title classification if rule-based mapping didn't find a match.</li>
+                    <li><strong>🤖 LLM CALL #5 - Follow-up Question:</strong> Generates follow-up questions after SQL generation to help users refine their search</li>
+                </ul>
+                <p><strong>Note:</strong> Title mapping is primarily rule-based (keyword matching from config file), but if no match is found, the LLM handles it during SQL generation (LLM Call #4). SQL validation is rule-based and does not require LLM calls.</p>
+            </div>
+
+            <h3>3. Update Request Flow</h3>
+            <div class="description">
+                <p>Technical details of how update requests preserve unmentioned fields while updating only explicitly mentioned ones.</p>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    Start([User: 'add New York']) --> Check{SQL Exists?}
+    
+    Check -->|Yes| Extract[🔍 Extract Info<br/>Detect mentioned fields]
+    Check -->|No| NewFlow[New Query Flow]
+    
+    Extract --> Mentioned{What's Mentioned?}
+    
+    Mentioned -->|Geography| PreserveGeo[✓ Preserve:<br/>Industry, Title,<br/>Employee Size, etc.]
+    Mentioned -->|Industry| PreserveInd[✓ Preserve:<br/>Geography, Title,<br/>Employee Size, etc.]
+    Mentioned -->|Title| PreserveTitle[✓ Preserve:<br/>Geography, Industry,<br/>Employee Size, etc.]
+    
+    PreserveGeo --> Update[🔄 Update Only<br/>Mentioned Fields]
+    PreserveInd --> Update
+    PreserveTitle --> Update
+    
+    Update --> Map[🏭 Map Industry/Title<br/>Only if Mentioned]
+    Map --> SQL[💾 Generate SQL<br/>With All Filters]
+    SQL --> Results([✅ Updated Results])
+    
+    style Start fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style Extract fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style PreserveGeo fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style PreserveInd fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style PreserveTitle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Update fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style Map fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style SQL fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Results fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+                </div>
+            </div>
+
+            <h3>4. Conversation Memory Flow</h3>
+            <div class="description">
+                <p>How conversation memory is maintained and used throughout the workflow to provide context-aware responses.</p>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TD
+    UserInput[User Input] --> CM[📝 Conversation Manager]
+    
+    CM --> UpdateMem[Update Memory]
+    
+    UpdateMem --> AddTurn[Add Conversation Turn]
+    AddTurn --> Prune{Memory > Max?}
+    
+    Prune -->|Yes| KeepRecent[Keep Recent Turns]
+    Prune -->|No| UseAll[Use All Turns]
+    
+    KeepRecent --> Context[Build Context]
+    UseAll --> Context
+    
+    Context --> TrackQA[Track Q&A Pairs]
+    Context --> TrackCorr[Track Corrections]
+    Context --> TrackUpdates[Track Updates]
+    
+    TrackQA --> Extract[🔍 Extract Info<br/>With Context]
+    TrackCorr --> Extract
+    TrackUpdates --> Extract
+    
+    Extract --> Clarify[❓ Clarification<br/>With Context]
+    Extract --> SQL[💾 SQL Generation<br/>With Context]
+    
+    Clarify --> Context
+    SQL --> Context
+    
+    style UserInput fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style CM fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style UpdateMem fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Context fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Extract fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Clarify fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    style SQL fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+                </div>
+            </div>
+
+            <h3>5. Node Details</h3>
+            <div class="description">
+                <h3>Key Nodes Explained</h3>
+                <ul>
+                    <li><strong>Conversation Manager:</strong> Updates conversation history and context, tracks Q&A pairs, corrections, and updates</li>
+                    <li><strong>Extract Info:</strong> Uses LLM with structured output (ExtractedInfoWithMentioned) to extract fields and detect what was mentioned</li>
+                    <li><strong>Validate Completeness:</strong> Checks required fields (geography, industry) and recommended fields (title, employee_size)</li>
+                    <li><strong>Request Clarification:</strong> Uses LLM with QuestionResponse to generate context-aware questions, supports HITL interrupts</li>
+                    <li><strong>Map Industry:</strong> Maps industry descriptions to SIC codes using LLM with IndustrySICMapping, preserves existing mapping if not mentioned</li>
+                    <li><strong>Map Title:</strong> Maps titles to tier-based SQL conditions, preserves existing mapping if not mentioned</li>
+                    <li><strong>Generate SQL:</strong> Creates SQL query using full conversation context, database schema, and all extracted filters</li>
+                    <li><strong>Validate SQL:</strong> Validates SQL for safety using SQLValidator (blocks dangerous operations)</li>
+                    <li><strong>Handle Update:</strong> Processes update requests by preserving unmentioned fields and updating only mentioned ones</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+metadata:
+  name: "sql_generation"
+  version: "1.0.0"
+  description: "Generate SQL SELECT queries for ICP data filtering (database-agnostic)"
+  last_updated: "2025-12-01"
+
+prompt: |
+  Generate a SQL SELECT query from the schema and requirements below.
+  Use standard SQL syntax that works across different databases (PostgreSQL, Databricks, MySQL, etc.).
+
+  Schema: {schema_info}
+
+  Requirements:
+  - Geography: {geography}
+  - Industry: {industry}
+  - Title: {title}
+  - Employee Size: {employee_size}
+  - Square Footage: {square_footage}
+  - Sales Volume: {sales_volume}
+
+  CRITICAL: If any field contains "OMIT" or "Not specified (OMIT this filter)", completely exclude that filter from WHERE clause. Include ALL non-OMIT filters.
+
+  Rules:
+  1. Return ONLY the SQL query, no markdown or explanations
+  2. Geography: Use LOWER(geography) LIKE LOWER('%value%') for case-insensitive partial matches (database-agnostic). Multiple locations: use OR conditions
+  3. Industry: Column stores 4-digit SIC codes (0000-8999). ALWAYS use industry IN (...) with SIC codes, NEVER text matching. If value contains "REQUIRED SQL condition: industry IN (...)", include that exact condition. Multiple industries: combine with OR
+  4. Title: ALWAYS use title_tier column. If value contains "SQL condition: title_tier = ...", use that EXACT condition. Multiple titles: classify each into tier and combine with OR. NEVER use title LIKE or text matching
+  5. Employee Size & Square Footage: Interpret user input directly. "below X" → < X, "above X" → > X, "around X" → approximate range, "between X and Y" → BETWEEN. Buckets: "small"/"micro" → 1-20, "medium" → 21-200, "large"/"enterprise" → >=201 (employee_size); "small" → < 5000, "medium" → 5000-20000, "large" → >= 20000 (square_footage). Use ranges, avoid exact matches. ONLY include if value provided (not "OMIT"). NEVER use IS NULL
+  6. Sales Volume: Convert units (M=1,000,000, B=1,000,000,000, K=1,000). "less than XM"/"under XM"/"below XM" → < [converted], "more than XM"/"over XM"/"above XM" → > [converted], "between XM and YM" → BETWEEN [converted]. Check schema for exact column name. ONLY include if value provided (not "OMIT"). NEVER use IS NULL
+
+  SQL Query:
+
+variables:
+  - name: "schema_info"
+    description: "Database schema information from InfoSQLDatabaseTool"
+    required: true
+  - name: "geography"
+    description: "Geography filter value"
+    required: false
+  - name: "industry"
+    description: "Industry filter value (may include SIC codes)"
+    required: false
+  - name: "title"
+    description: "Title filter value (may include SQL condition)"
+    required: false
+  - name: "employee_size"
+    description: "Employee size filter value (raw user input)"
+    required: false
+  - name: "square_footage"
+    description: "Square footage filter value (raw user input)"
+    required: false
+  - name: "sales_volume"
+    description: "Sales volume filter value (raw user input)"
+    required: false

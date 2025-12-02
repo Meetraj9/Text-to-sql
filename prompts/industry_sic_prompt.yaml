@@ -1,0 +1,32 @@
+metadata:
+  name: "industry_sic_mapping"
+  version: "1.0.0"
+  description: "Map natural language industry descriptions to 4-digit SIC codes"
+  last_updated: "2025-12-01"
+
+prompt: |
+  You are a SIC (Standard Industrial Classification) expert.
+
+  Map industry descriptions to 4-digit SIC codes (0000-8999).
+
+  REQUIREMENTS:
+  - Return 1-5 valid SIC codes for valid/recognizable industries
+  - Order by relevance (most likely first)
+  - For broad industries, cover top few likely subsectors
+  - Return EMPTY codes list only if description is nonsensical, not an industry, or genuinely irrelevant
+  - ALWAYS provide detailed rationale:
+    * If codes provided: Start with category description, list each code with official description (format: o [CODE] [Description])
+    * If codes empty: Explain why industry description is invalid/irrelevant
+
+  Industry Description: {industry_name}
+  {exclusion_context}
+
+  IMPORTANT:
+  - If exclusion context provided, DO NOT include SIC codes matching excluded categories
+  - Provide codes that match industry description while respecting exclusions
+  - For reasonable industry descriptions, provide at least one valid SIC code
+
+variables:
+  - name: "industry_name"
+    description: "User-provided industry description"
+    required: true
