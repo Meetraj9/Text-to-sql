@@ -16,7 +16,7 @@ A sophisticated conversational text-to-SQL system built with LangGraph that gene
 
 ### Advanced Features
 - **Contextual Questions**: Asks relevant follow-up questions beyond required fields
-- **Industry Mapping**: Maps industry descriptions to SIC codes with detailed rationale
+- **Industry Mapping**: Maps industry descriptions to SIC codes of PRIMARY BUYERS (companies that purchase the service/product), NOT providers, with detailed rationale
 - **Title Tier Mapping**: Rule-based title classification with LLM fallback
 - **Sales Volume Filtering**: Supports revenue-based filtering
 - **Update Preservation**: Only updates mentioned fields, preserves others
@@ -40,7 +40,7 @@ The system uses a state machine workflow with the following nodes:
 - **Extract Info**: Extracts structured information using LLM with `ExtractedInfoWithMentioned`
 - **Validate Completeness**: Checks required vs recommended fields
 - **Request Clarification**: Generates context-aware questions (HITL interrupt point)
-- **Map Industry**: Maps industry to SIC codes using LLM
+- **Map Industry**: Maps industry to SIC codes of PRIMARY BUYERS using LLM (finds companies that purchase the service/product, not providers)
 - **Map Title**: Maps titles to tier-based SQL conditions (rule-based with LLM fallback)
 - **Generate SQL**: Creates SQL query with full conversation context
 - **Validate SQL**: Validates query safety
@@ -312,7 +312,7 @@ The system makes 5 LLM calls per workflow execution:
 
 1. **Extract Info**: Extracts structured information from user input
 2. **Generate Question**: Creates clarifying questions when needed
-3. **Map Industry**: Maps industry descriptions to SIC codes
+3. **Map Industry**: Maps industry descriptions to SIC codes of PRIMARY BUYERS (companies that purchase the service/product, not providers)
 4. **Generate SQL**: Creates SQL query with conversation context
 5. **Follow-up Question**: Generates follow-up questions after SQL generation
 
