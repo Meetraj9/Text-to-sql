@@ -16,12 +16,13 @@ logger = get_logger(__name__)
 
 def map_industry_node(state: WorkflowState) -> WorkflowState:
     """
-    Map industry to SIC codes.
+    Map industry to SIC codes of PRIMARY BUYERS (companies that purchase the service/product).
     Preservation rule: Only re-maps if industry was mentioned in update request, 
     otherwise preserves existing sic_context (same pattern as all other filters).
     """
     extracted_info = state.get("extracted_info", {})
     industry = extracted_info.get("industry")
+    target_customer_type = extracted_info.get("target_customer_type")
     mentioned_fields = state.get("mentioned_fields", [])
     is_update_request = state.get("sql_query") is not None
     
@@ -44,20 +45,33 @@ def map_industry_node(state: WorkflowState) -> WorkflowState:
                 logger.info(f"Industry value unchanged ('{industry}') - preserving existing sic_context")
                 return state
     
+    # Build descriptive industry sentence combining industry + target customer type
+    if target_customer_type and not is_empty_value(target_customer_type):
+        industry_description = f"{industry} for {target_customer_type}"
+    else:
+        industry_description = industry
+    
     # Check if multiple industries (comma-separated)
     if "," in industry:
         industries_list = [i.strip() for i in industry.split(",")]
         
-        # Map each industry to SIC codes
+        # Map each industry to SIC codes (with target customer type if provided)
         all_codes = []
         all_mappings = []
         
         industry_mapper = get_industry_mapper()
         for ind in industries_list:
             try:
-                sic_codes, mapping = industry_mapper.get_sic_codes_for_query(ind, None)
-                all_codes.extend(sic_codes)
-                all_mappings.append(f"{ind}: {', '.join(sic_codes)}")
+                # Combine individual industry with target customer type
+                if target_customer_type and not is_empty_value(target_customer_type):
+                    ind_description = f"{ind} for {target_customer_type}"
+                else:
+                    ind_description = ind
+                
+                sic_codes, mapping = industry_mapper.get_sic_codes_for_query(ind_description, None)
+                # sic_codes is a formatted string, mapping.codes is the actual list
+                all_codes.extend(mapping.codes)
+                all_mappings.append(f"{ind_description}: {', '.join(mapping.codes)}")
             except Exception as e:
                 logger.warning(f"Error mapping industry '{ind}': {e}")
         
@@ -66,16 +80,22 @@ def map_industry_node(state: WorkflowState) -> WorkflowState:
         rationales = []
         for ind in industries_list:
             try:
-                _, mapping = industry_mapper.get_sic_codes_for_query(ind, None)
+                # Use same description format as above
+                if target_customer_type and not is_empty_value(target_customer_type):
+                    ind_description = f"{ind} for {target_customer_type}"
+                else:
+                    ind_description = ind
+                
+                _, mapping = industry_mapper.get_sic_codes_for_query(ind_description, None)
                 if mapping.rationale:
-                    rationales.append(f"{ind}: {mapping.rationale}")
+                    rationales.append(f"{ind_description}: {mapping.rationale}")
             except Exception:
                 pass  # Skip if mapping failed
         
         combined_rationale = "Multiple industries mapped:\n" + "\n\n".join(rationales) if rationales else f"Multiple industries mapped: {'; '.join(all_mappings)}"
         
         state["sic_context"] = {
-            "industry_input": industry,
+            "industry_input": industry_description,
             "codes": list(set(all_codes)),  # Remove duplicates
             "rationale": combined_rationale
         }
@@ -100,27 +120,35 @@ def map_industry_node(state: WorkflowState) -> WorkflowState:
                     break
         
         try:
+            logger.info(f"Mapping industry to SIC codes: '{industry_description}'")
             industry_mapper = get_industry_mapper()
-            sic_codes, mapping = industry_mapper.get_sic_codes_for_query(industry, exclusion_context)
+            sic_codes, mapping = industry_mapper.get_sic_codes_for_query(industry_description, exclusion_context)
+            
+            # Check if we got codes (mapping.codes is the list, sic_codes is formatted string)
+            if not mapping.codes or len(mapping.codes) == 0:
+                logger.warning(f"No SIC codes found for industry '{industry_description}'")
+                state["sql_error"] = f"No SIC codes found for industry: {industry_description}"
+                state["sql_valid"] = False
+                return state
+            
+            logger.info(f"Successfully mapped '{industry_description}' to {len(mapping.codes)} SIC codes: {mapping.codes}")
             
             state["sic_context"] = {
-                "industry_input": industry,
+                "industry_input": industry_description,
                 "codes": mapping.codes,
                 "rationale": mapping.rationale or "LLM provided these SIC codes based on domain knowledge."
             }
-            
-            if not sic_codes or len(sic_codes) == 0:
-                logger.warning(f"No SIC codes found for industry '{industry}'")
         
         except IndustryNotFoundError as e:
             logger.error(f"Industry not found: {e}")
             state["sql_error"] = str(e)
             state["sql_valid"] = False
-            raise
+            # Don't raise - let workflow continue to show error to user
         except Exception as e:
-            logger.error(f"Error mapping industry: {e}", exc_info=True)
-            state["sql_error"] = str(e)
+            logger.error(f"Error mapping industry '{industry_description}': {e}", exc_info=True)
+            state["sql_error"] = f"Error mapping industry to SIC codes: {str(e)}"
             state["sql_valid"] = False
+            # Don't raise - let workflow continue to show error to user
     
     return state
 

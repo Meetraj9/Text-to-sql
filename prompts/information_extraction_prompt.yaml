@@ -9,7 +9,8 @@ prompt: |
 
   Fields to extract (ONLY if explicitly mentioned):
   - Geography: Location (US state or city) - extract exactly as provided
-  - Industry: Business/industry type
+  - Industry: The service, product, or business type the user is selling/providing. This will be mapped to SIC codes of companies that BUY this service/product, NOT companies that provide it.
+  - Target Customer Type: Qualifier about target customers (e.g., "startups", "small businesses", "enterprises", "restaurants") mentioned in phrases like "to startups", "for small businesses", "targeting enterprises". Extract only if explicitly mentioned. This helps focus on specific buyer types.
   - Title: Decision maker role/title
   - Employee Size: Company size value
   - Square Footage: Property size value
@@ -19,11 +20,24 @@ prompt: |
   1. **MULTIPLE VALUES**: Extract all mentioned values as comma-separated list for geography, industry, and title
   2. **PRESERVE EXACT VALUES**: Extract numbers, ranges, and phrases exactly as provided. Only convert to bucket names if user explicitly uses them
   3. **CURRENT QUERY ONLY**: Extract only from current query - set fields to null if not mentioned
-  4. **AMBIGUOUS VALUES**: Use context indicators ("k"/"sq ft" → square_footage, "employees"/"people" → employee_size)
-  5. **CLEARING FILTERS**: Return null for fields when user says "any", "all", "remove", "clear", "no [field]", etc.
-  6. **UPDATE REQUESTS**: If UPDATE request, ONLY extract explicitly mentioned fields. Set mentioned flags: True for mentioned fields (even if null), False for unmentioned fields. For unmentioned fields, return null AND set mentioned flag to False. DO NOT infer or extract values for unmentioned fields. For new queries, set all mentioned flags to True
-  7. **APPENDING VALUES**: If user uses append indicators ("too", "also", "both", "include", "add", "plus"), extract ALL values including existing ones. Otherwise, extract only new value (replacement)
-  8. **DO NOT INFER**: Never infer field values from context. If a field is not explicitly mentioned in the current user input, return null for that field and set its mentioned flag to False
+  4. **INDUSTRY EXTRACTION**: 
+     - Industry represents what the user is SELLING/PROVIDING, not who they are selling to
+     - CRITICAL: The industry will be mapped to SIC codes of PRIMARY BUYERS of that service/product, NOT companies that provide it
+     - If the user describes selling/providing something (service, product, solution), extract that as the industry
+     - If the user mentions a target customer type, that is NOT the industry - it's a qualifier about who buys the service/product
+     - Only extract a direct industry name if the user is targeting companies IN that industry, not selling something to them
+     
+     EXAMPLES (illustrative only - apply the principle to all cases):
+     - "I sell healthcare insurance to startups" → industry = "healthcare insurance", target_customer_type = "startups" (will find startup companies that BUY insurance, NOT insurance companies)
+     - "I provide cleaning services for offices" → industry = "cleaning services", target_customer_type = "offices" (will find companies that BUY cleaning services, NOT cleaning companies)
+     - "I sell software to restaurants" → industry = "software", target_customer_type = "restaurants" (will find restaurants that BUY software, NOT software companies)
+     - "restaurants in California" → industry = "restaurants", target_customer_type = null (direct industry targeting, no qualifier)
+  5. **AMBIGUOUS VALUES**: Use context indicators ("k"/"sq ft" → square_footage, "employees"/"people" → employee_size)
+  6. **CLEARING FILTERS**: When user explicitly says "any", "all", "remove", "clear", "no [field]", "any size", "any location", etc., this means they explicitly want NO FILTER for that field. Return null for the value BUT set the mentioned flag to True to indicate the field was explicitly mentioned (works for both new queries and updates).
+  7. **UPDATE REQUESTS**: If UPDATE request, ONLY extract explicitly mentioned fields. Set mentioned flags: True for mentioned fields (even if null), False for unmentioned fields. For unmentioned fields, return null AND set mentioned flag to False. DO NOT infer or extract values for unmentioned fields.
+  8. **NEW QUERIES**: For new queries, set mentioned flags to True for fields that are EXPLICITLY mentioned in the user's input, even if the value is null (e.g., "any size" → employee_size=null, employee_size_mentioned=True). This helps distinguish "explicitly said 'any'" from "not mentioned at all". Set mentioned flags to False for fields not mentioned. CRITICAL: If user says "any [field]", set that field's mentioned flag to True and value to null.
+  9. **APPENDING VALUES**: If user uses append indicators ("too", "also", "both", "include", "add", "plus"), extract ALL values including existing ones. Otherwise, extract only new value (replacement)
+  10. **DO NOT INFER**: Never infer field values from context. If a field is not explicitly mentioned in the current user input, return null for that field and set its mentioned flag to False
 
   User Query: {user_query}
 

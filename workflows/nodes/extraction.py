@@ -101,6 +101,7 @@ def extract_info_node(state: WorkflowState) -> WorkflowState:
         extracted_dict = {
             "geography": extracted.geography,
             "industry": extracted.industry,
+            "target_customer_type": extracted.target_customer_type,
             "title": extracted.title,
             "employee_size": extracted.employee_size,
             "square_footage": extracted.square_footage,
@@ -132,6 +133,8 @@ def extract_info_node(state: WorkflowState) -> WorkflowState:
                 mentioned_fields.add("square_footage")
             if extracted.sales_volume_mentioned:
                 mentioned_fields.add("sales_volume")
+            if extracted.target_customer_type_mentioned:
+                mentioned_fields.add("target_customer_type")
             
             # Store mentioned fields in state so other nodes can check
             state["mentioned_fields"] = list(mentioned_fields)
@@ -148,7 +151,7 @@ def extract_info_node(state: WorkflowState) -> WorkflowState:
                     current_extracted[field] = None
             
             # Explicitly preserve all fields NOT in mentioned_fields
-            all_fields = ["geography", "industry", "title", "employee_size", "square_footage", "sales_volume"]
+            all_fields = ["geography", "industry", "target_customer_type", "title", "employee_size", "square_footage", "sales_volume"]
             for field in all_fields:
                 if field not in mentioned_fields:
                     # Preserve existing value - do NOT use extracted value even if LLM provided one
@@ -158,11 +161,34 @@ def extract_info_node(state: WorkflowState) -> WorkflowState:
             
             state["extracted_info"] = current_extracted
         else:
-            # For new queries, clear mentioned_fields and use all extracted fields
-            state["mentioned_fields"] = []
+            # For new queries, track mentioned fields based on mentioned flags
+            # This allows us to distinguish "explicitly said 'any'" from "not mentioned"
+            mentioned_fields = set()
+            if extracted.geography_mentioned:
+                mentioned_fields.add("geography")
+            if extracted.industry_mentioned:
+                mentioned_fields.add("industry")
+            if extracted.title_mentioned:
+                mentioned_fields.add("title")
+            if extracted.employee_size_mentioned:
+                mentioned_fields.add("employee_size")
+            if extracted.square_footage_mentioned:
+                mentioned_fields.add("square_footage")
+            if extracted.sales_volume_mentioned:
+                mentioned_fields.add("sales_volume")
+            if extracted.target_customer_type_mentioned:
+                mentioned_fields.add("target_customer_type")
+            
+            state["mentioned_fields"] = list(mentioned_fields)
+            
+            # Update extracted info - include all fields, even if null (to preserve "any" = null)
             current_extracted = dict(state.get("extracted_info", {}))
             for field, value in extracted_dict.items():
-                if value and not is_empty_value(value):
+                # Always update with extracted value (even if null) if field was mentioned
+                if field in mentioned_fields:
+                    current_extracted[field] = value
+                elif value and not is_empty_value(value):
+                    # If not explicitly mentioned but has value, update it
                     current_extracted[field] = value
             
             state["extracted_info"] = current_extracted
@@ -182,13 +208,19 @@ def extract_info_node(state: WorkflowState) -> WorkflowState:
 def validate_completeness_node(state: WorkflowState) -> WorkflowState:
     """
     Check if all required fields are present.
+    
+    CRITICAL: If a field is in mentioned_fields but is null, that means the user
+    explicitly said "any" or "remove" for that field, so it should NOT be added
+    to missing_fields (user explicitly wants no filter for that field).
     """
     logger.info("=" * 80)
     logger.info("NODE: validate_completeness_node - Checking field completeness")
     logger.info("=" * 80)
     
     extracted_info = state.get("extracted_info", {})
+    mentioned_fields = set(state.get("mentioned_fields", []))
     logger.info(f"Current extracted info: {extracted_info}")
+    logger.info(f"Mentioned fields: {mentioned_fields}")
     
     # Check if this is an update request - if SQL exists, skip validation for optional fields
     is_update_request = state.get("sql_query") is not None
@@ -200,6 +232,10 @@ def validate_completeness_node(state: WorkflowState) -> WorkflowState:
     required_fields = ["geography", "industry"]
     for field in required_fields:
         value = extracted_info.get(field)
+        # If field is explicitly mentioned but null, user said "any" - don't treat as missing
+        if field in mentioned_fields and value is None:
+            logger.info(f"Field '{field}' explicitly mentioned as 'any' (null) - not treating as missing")
+            continue
         if is_empty_value(value):
             missing_fields.append(field)
             logger.info(f"Missing required field: {field}")
@@ -209,14 +245,20 @@ def validate_completeness_node(state: WorkflowState) -> WorkflowState:
     # Recommended fields (ask but proceed if not provided)
     if not is_update_request:
         title = extracted_info.get("title")
-        if is_empty_value(title):
+        # If title is explicitly mentioned but null, user said "any" - don't treat as missing
+        if "title" in mentioned_fields and title is None:
+            logger.info("Title explicitly mentioned as 'any' (null) - not treating as missing")
+        elif is_empty_value(title):
             missing_fields.append("title")
             logger.info("Missing recommended field: title")
         else:
             logger.info(f"Title present: {title}")
         
         employee_size = extracted_info.get("employee_size")
-        if is_empty_value(employee_size):
+        # If employee_size is explicitly mentioned but null, user said "any size" - don't treat as missing
+        if "employee_size" in mentioned_fields and employee_size is None:
+            logger.info("Employee size explicitly mentioned as 'any' (null) - not treating as missing")
+        elif is_empty_value(employee_size):
             missing_fields.append("employee_size")
             logger.info("Missing recommended field: employee_size")
         else:
@@ -238,7 +280,10 @@ def validate_completeness_node(state: WorkflowState) -> WorkflowState:
         
         if requires_sqft:
             square_footage = extracted_info.get("square_footage")
-            if is_empty_value(square_footage):
+            # If square_footage is explicitly mentioned but null, user said "any" - don't treat as missing
+            if "square_footage" in mentioned_fields and square_footage is None:
+                logger.info("Square footage explicitly mentioned as 'any' (null) - not treating as missing")
+            elif is_empty_value(square_footage):
                 if not is_update_request:  # Only ask for new requests
                     missing_fields.append("square_footage")
     

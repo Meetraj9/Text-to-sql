@@ -30,6 +30,7 @@ def get_empty_extracted_info() -> dict:
     return {
         "geography": None,
         "industry": None,
+        "target_customer_type": None,
         "title": None,
         "employee_size": None,
         "square_footage": None,

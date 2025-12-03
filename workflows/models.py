@@ -33,6 +33,10 @@ class ExtractedInfoWithMentioned(BaseModel):
         None,
         description="Sales volume/revenue - can be specific number (e.g., '50M', '$50M', '50 million'), range (e.g., 'below 50M', 'above 100M', 'between 10M and 50M'), or phrases like 'less than 50M', 'under 50M', 'over 100M'. Preserve the exact format as provided by user."
     )
+    target_customer_type: Optional[str] = Field(
+        None,
+        description="Target customer type qualifier (e.g., 'startups', 'small businesses', 'enterprises', 'restaurants') mentioned in phrases like 'to startups', 'for small businesses', 'targeting enterprises'. Extract only if explicitly mentioned. This is a qualifier about who buys the service/product, not the industry itself."
+    )
     geography_mentioned: bool = Field(
         False,
         description="True if geography/location is explicitly mentioned in the user's request (only relevant for update requests)"
@@ -56,6 +60,10 @@ class ExtractedInfoWithMentioned(BaseModel):
     sales_volume_mentioned: bool = Field(
         False,
         description="True if sales_volume/revenue is explicitly mentioned in the user's request (only relevant for update requests)"
+    )
+    target_customer_type_mentioned: bool = Field(
+        False,
+        description="True if target_customer_type is explicitly mentioned in the user's request (only relevant for update requests)"
     )
 
 
@@ -83,7 +91,13 @@ class QuestionResponse(BaseModel):
 
 
 class IndustrySICMapping(BaseModel):
-    """LLM response for SIC code mapping."""
+    """
+    LLM response for SIC code mapping.
+    
+    CRITICAL: The industry description represents what the user SELLS (service/product).
+    The codes field contains SIC codes for PRIMARY BUYERS (companies that purchase the service/product),
+    NOT companies that provide it.
+    """
     
     industry: str = Field(
         ...,
@@ -91,8 +105,8 @@ class IndustrySICMapping(BaseModel):
     )
     codes: List[str] = Field(
         default_factory=list,
-        description="List of 4-digit SIC codes (0000-8999) most relevant to the industry. Empty list if industry is irrelevant/nonsensical.",
-        max_items=5  # This is validated by config, but Pydantic requires a literal for max_items
+        description="List of 4-digit SIC codes (0000-8999) for PRIMARY BUYERS of the service/product. These represent companies that PURCHASE the service/product regularly, NOT companies that provide it. Empty list if industry is irrelevant/nonsensical. Return all genuinely relevant codes - include as many as are truly relevant primary buyers, but do not add extra codes just to reach a certain number. Quality over quantity.",
+        max_items=50  # High limit for validation, but LLM should return only genuinely relevant codes
     )
     rationale: Optional[str] = Field(
         None,
