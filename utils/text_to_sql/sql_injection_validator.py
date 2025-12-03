@@ -22,9 +22,6 @@ class SQLInjectionValidator:
         'OR 1=1',
         'OR \'1\'=\'1\'',
         'OR "1"="1"',
-        '--',  # SQL comment (can hide malicious code)
-        '/*',  # Multi-line comment start
-        '*/',  # Multi-line comment end
         'EXEC(',  # Function execution
         'EXECUTE(',
         'xp_',  # Extended stored procedures
@@ -56,7 +53,9 @@ class SQLInjectionValidator:
             - is_safe: True if no injection patterns found, False otherwise
             - error_message: Empty string if safe, error message if injection detected
         """
-        query_upper = query.upper()
+        # Remove SQL comments before checking patterns (allow legitimate comments)
+        query_cleaned = SQLInjectionValidator._remove_comments(query)
+        query_upper = query_cleaned.upper()
         
         # Check for injection patterns
         for pattern in SQLInjectionValidator.INJECTION_PATTERNS:
@@ -88,6 +87,48 @@ class SQLInjectionValidator:
         return True, ""
     
     @staticmethod
+    def _remove_comments(query: str) -> str:
+        """
+        Remove SQL comments from query for validation purposes.
+        
+        Args:
+            query: SQL query string
+            
+        Returns:
+            Query with comments removed
+        """
+        import re
+        
+        # Remove single-line comments (-- comment)
+        lines = query.split('\n')
+        query_without_comments = []
+        for line in lines:
+            # Find -- that's not inside a string
+            comment_pos = -1
+            in_string = False
+            quote_char = None
+            for i, char in enumerate(line):
+                if char in ("'", '"') and (i == 0 or line[i-1] != '\\'):
+                    if not in_string:
+                        in_string = True
+                        quote_char = char
+                    elif char == quote_char:
+                        in_string = False
+                        quote_char = None
+                elif not in_string and i < len(line) - 1 and line[i:i+2] == '--':
+                    comment_pos = i
+                    break
+            if comment_pos >= 0:
+                line = line[:comment_pos].rstrip()
+            query_without_comments.append(line)
+        
+        # Remove multi-line comments (/* comment */)
+        query_cleaned = '\n'.join(query_without_comments)
+        query_cleaned = re.sub(r'/\*.*?\*/', '', query_cleaned, flags=re.DOTALL)
+        
+        return query_cleaned
+    
+    @staticmethod
     def check_multiple_statements(query: str) -> tuple[bool, str]:
         """
         Check for multiple SQL statements (potential SQL injection).
@@ -100,8 +141,11 @@ class SQLInjectionValidator:
             - is_safe: True if single statement, False if multiple detected
             - error_message: Empty string if safe, error message if multiple statements found
         """
+        # Remove comments before checking for multiple statements
+        query_cleaned = SQLInjectionValidator._remove_comments(query)
+        
         # Count semicolons (excluding trailing semicolon)
-        query_stripped = query.strip().rstrip(';').strip()
+        query_stripped = query_cleaned.strip().rstrip(';').strip()
         semicolon_count = query_stripped.count(';')
         
         if semicolon_count > 0:
