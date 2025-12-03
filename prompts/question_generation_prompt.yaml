@@ -9,7 +9,7 @@ prompt: |
 
   Available fields:
   - geography: Location (US state or city) - REQUIRED
-  - industry: Business/industry type - REQUIRED
+  - industry: The service, product, or business type the user is selling/providing - REQUIRED (will be mapped to SIC codes of companies that BUY this service/product)
   - title: Decision maker role - RECOMMENDED
   - employee_size: Company size - RECOMMENDED
   - square_footage: Property size - CONDITIONAL (only if industry requires it)

@@ -9,22 +9,71 @@ prompt: |
 
   Map industry descriptions to 4-digit SIC codes (0000-8999).
 
+  CRITICAL RULE - ALWAYS FIND BUYERS:
+  
+  ALWAYS find SIC codes for companies that BUY/NEED the service or product, NEVER companies that PROVIDE it.
+  
+  The industry description represents what the user SELLS (service or product). Your job is to find the PRIMARY BUYERS of that service/product.
+  
+  - Find PRIMARY BUYERS: businesses that purchase this service/product frequently and at volume as part of their regular operations
+  - If description includes a target customer type qualifier (e.g., "for startups", "for small businesses", "for restaurants"), focus SIC codes on companies matching that customer type while still finding BUYERS of the service/product
+  - Example: "healthcare insurance for startups" → Find startup-type companies (tech, software, etc.) that BUY insurance, NOT insurance companies
+  - Example: "printing services" → Find companies that BUY printing (advertising agencies, retailers, restaurants, manufacturers), NOT printing companies
+  - Focus on industries where purchasing this service/product is standard practice and a regular operational need
+  - DO NOT include SIC codes for companies that PROVIDE the same service/product (competitors, not customers)
+  - DO NOT include companies that only occasionally use the service/product
+
+  DECISION RULES:
+  - Think: "Who are the PRIMARY BUYERS across multiple industry categories?"
+  - CRITICAL: Include a DIVERSE range of primary buyer categories - do not focus on just one industry type
+  - For broad services/products, consider multiple categories that are standard customers:
+    * Professional services (advertising, legal, accounting, consulting, marketing)
+    * Consumer-facing businesses (restaurants, retail stores, hospitality)
+    * Manufacturing (for operational needs like packaging, labels, documentation)
+    * Real estate and construction
+    * Healthcare and education
+    * And other primary buyers depending on the service/product
+  - Think broadly: Which industries across different sectors regularly purchase this service/product?
+  - Prioritize industries that are widely recognized as common customers
+  - Exclude niche, specialized, or edge-case industries
+  - Only include industries that are genuinely primary buyers
+
   REQUIREMENTS:
-  - Return 1-5 valid SIC codes for valid/recognizable industries
-  - Order by relevance (most likely first)
-  - For broad industries, cover top few likely subsectors
+  - Return the most relevant SIC codes for primary buyers
+  - CRITICAL: Include codes from MULTIPLE diverse categories - show breadth, not just depth in one category
+  - For broad services/products, return 10-15 codes across multiple categories
+  - Before finalizing, verify you've considered multiple categories: professional services, consumer-facing, manufacturing (if applicable), real estate, healthcare/education, and others relevant to the service/product
+  - Order by relevance and purchase volume (most relevant high-volume buyers first)
   - Return EMPTY codes list only if description is nonsensical, not an industry, or genuinely irrelevant
-  - ALWAYS provide detailed rationale:
-    * If codes provided: Start with category description, list each code with official description (format: o [CODE] [Description])
-    * If codes empty: Explain why industry description is invalid/irrelevant
+  
+  RATIONALE REQUIREMENTS:
+  - Organize by category (e.g., "Professional Services", "Retail & Consumer", "Manufacturing", "Real Estate", "Healthcare & Education", etc.) to demonstrate diverse range
+  - Before finalizing, verify you've included relevant categories for the service/product - if a major relevant category is missing, reconsider and include it
+  - For each code, provide a 2-line description:
+    * Line 1: o [CODE] [Official SIC Description]
+    * Line 2: [Why this industry is a primary buyer of the service/product - what they purchase and why]
+  - Explicitly state: "These SIC codes represent companies that BUY/NEED [service/product] regularly, NOT companies that PROVIDE [service/product]"
+  - Explain why each industry is a primary buyer - what they purchase and why it's a regular need
+  - Show that you considered multiple categories of buyers across different sectors
 
   Industry Description: {industry_name}
   {exclusion_context}
 
+  EXAMPLES (illustrative only - apply the principle to all cases):
+  
+  - "printing services" → Find companies that BUY printing (advertising agencies, retailers, restaurants, manufacturers), NOT printing companies
+  - "cleaning services" → Find companies that BUY cleaning (offices, retail, healthcare facilities), NOT cleaning companies
+  - "healthcare insurance" → Find companies that BUY insurance (all businesses need insurance), NOT insurance companies
+  - "healthcare insurance for startups" → Find startup-type companies that BUY insurance (tech companies, software companies, etc. that need insurance), NOT insurance companies
+  - "office supplies" → Find companies that BUY office supplies (offices, schools, healthcare facilities), NOT office supply manufacturers
+  - "accounting software" → Find companies that BUY accounting software (all businesses), NOT software companies
+  
+  Note: These examples illustrate the principle. ALWAYS find BUYERS, never PROVIDERS. If a target customer type is specified (e.g., "for startups", "for small businesses"), focus SIC codes on companies matching that customer type while still finding BUYERS of the service/product.
+
   IMPORTANT:
+  - ALWAYS find BUYERS of the service/product, NEVER providers
   - If exclusion context provided, DO NOT include SIC codes matching excluded categories
-  - Provide codes that match industry description while respecting exclusions
-  - For reasonable industry descriptions, provide at least one valid SIC code
+  - Quality over quantity: Only genuinely relevant primary buyers, but ensure diversity across categories
 
 variables:
   - name: "industry_name"
